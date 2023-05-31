@@ -17,7 +17,6 @@ ENV SQLX_OFFLINE true
 RUN cargo build --release --bin cloud_app
 # Runtime stage
 FROM debian:bullseye-slim AS runtime
-WORKDIR /app
 # Install OpenSSL - it is dynamically linked by some of our dependencies
 # Install ca-certificates - it is needed to verify TLS certificates
 # when establishing HTTPS connections
