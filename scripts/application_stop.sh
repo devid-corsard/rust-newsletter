@@ -1,3 +1,3 @@
 #!/bin/bash
 
-pm2 stop cloud_app
+pm2 stop cloud_app_cd

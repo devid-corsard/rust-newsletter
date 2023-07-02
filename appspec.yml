@@ -1,8 +1,8 @@
-version: 0.0.1
+version: 0.1
 os: linux
 files:
   - source: /
-    destination: /home/ubuntu/rustapp/newsletter_cd
+    destination: /home/ubuntu/rustapps/newsletter_cd
 hooks:
   ApplicationStop:
     - location: scripts/application_stop.sh
@@ -10,6 +10,14 @@ hooks:
       runas: ubuntu
   BeforeInstall:
     - location: scripts/before_install.sh
+      timeout: 300
+      runas: ubuntu
+  Install:
+    - location: scripts/install.sh
+      timeout: 300
+      runas: ubuntu
+  AfterInstall:
+    - location: scripts/after_install.sh
       timeout: 300
       runas: ubuntu
   ApplicationStart:
