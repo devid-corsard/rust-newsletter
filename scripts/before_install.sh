@@ -15,4 +15,4 @@ sqlx migrate run --database-url "postgres://ubuntu:password123@localhost:5432/ne
 cargo build --release --bin cloud_app
 mv target/release/cloud_app cloud_app
 
-echo "Build complete" > build.txt
+echo "Build complete" >> build.txt
