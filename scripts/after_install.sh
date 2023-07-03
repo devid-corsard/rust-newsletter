@@ -1,3 +1,5 @@
 #!/bin/bash
 cd /home/ubuntu/rustapps/newsletter_cd 
-cargo clean
+# cargo clean
+
+echo "Build complete" > after_build.txt

@@ -4,20 +4,20 @@ files:
   - source: /
     destination: /home/ubuntu/rustapps/newsletter_cd
 hooks:
-  ApplicationStop:
-    - location: scripts/application_stop.sh
-      timeout: 300
-      runas: ubuntu
   BeforeInstall:
     - location: scripts/before_install.sh
-      timeout: 300
+      timeout: 1800
       runas: ubuntu
-  Install:
-    - location: scripts/install.sh
-      timeout: 3000
+  AfterInstall:
+    - location: scripts/after_install.sh
+      timeout: 300
       runas: ubuntu
   ApplicationStart:
     - location: scripts/application_start.sh
+      timeout: 300
+      runas: ubuntu
+  ApplicationStop:
+    - location: scripts/application_stop.sh
       timeout: 300
       runas: ubuntu
 
