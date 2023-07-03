@@ -31,3 +31,6 @@ COPY --from=builder /app/target/release/cloud_app cloud_app
 COPY configuration configuration
 ENV APP_ENVIRONMENT production
 ENTRYPOINT ["./cloud_app"]
+
+FROM scratch AS binaries
+COPY --from=builder /app/target/release/cloud_app /
