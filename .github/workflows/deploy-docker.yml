@@ -19,11 +19,10 @@ jobs:
 
     - name: Build docker images
       run: |
-        docker build . -t newsletter-server
-        docker build -f Dockerfile.sqlx . -t newsletter-migrations
+        docker buildx build --platform linux/arm64/v8 -t newsletter-server .
+        docker buildx build --platform linux/arm64/v8 -t newsletter-migrations -f Dockerfile.sqlx .
         docker save newsletter-server > nls.tar
         docker save newsletter-migrations > nlm.tar
-
 
     - name: Copy images to server
       uses: appleboy/scp-action@v0.1.4
