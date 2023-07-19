@@ -1,0 +1,47 @@
+name: Deploy and Run
+
+on:
+  push:
+    branches:
+      - main
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build docker images
+      run: |
+        docker build . -t newsletter-server
+        docker build -f Dockerfile.sqlx . -t newsletter-migrations
+        docker save newsletter-server > nls.tar
+        docker save newsletter-migrations > nlm.tar
+
+
+    - name: Copy images to server
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.SERVER2_HOST }}
+        username: ${{ secrets.SERVER2_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "nls.tar, nlm.tar, migrations"
+        target: "/home/ubuntu/newsletter/"
+        overwrite: true
+
+    - name: Start server
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SERVER2_HOST }}
+        username: ${{ secrets.SERVER2_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY2 }}
+        script: |
+          cd /home/ubuntu/newsletter
+          docker load < nls.tar
+          docker load < nlm.tag
