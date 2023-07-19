@@ -1,0 +1,56 @@
+services:
+  postgres:
+    container_name: ${POSTGRES_HOST}
+    image: postgres:15-alpine
+    volumes:
+      - type: bind
+        source: ~/db_data/newsletter
+        target: /var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PW}
+      - POSTGRES_DB=${POSTGRES_DB} #optional (specify default database instead of $POSTGRES_DB)
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migration:
+    container_name: newsletter-sqlx-m
+    build:
+      context: . 
+      dockerfile: Dockerfile.sqlx
+    volumes:
+      - type: bind
+        source: migrations
+        target: /migrations
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  server:
+    container_name: newsletter-server
+    build:
+      context: .
+      target: runtime
+    networks:
+      - nginx
+    ports: 
+      - ${APP_PORT}:8080
+    environment:
+      - APP_DATABASE__USERNAME=${POSTGRES_USER}
+      - APP_DATABASE__PASSWORD=${POSTGRES_PW}
+      - APP_DATABASE__HOST=${POSTGRES_HOST}
+      - APP_DATABASE__DATABASE_NAME=${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  nginx:
+    name: nginx-for-all
+    external: true
