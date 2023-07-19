@@ -32,5 +32,7 @@ COPY configuration configuration
 ENV APP_ENVIRONMENT production
 ENTRYPOINT ["./cloud_app"]
 
-FROM scratch AS binaries
-COPY --from=builder /app/target/release/cloud_app /
+# export bin file from docker image:
+
+#FROM scratch AS binaries
+#COPY --from=builder /app/target/release/cloud_app /
