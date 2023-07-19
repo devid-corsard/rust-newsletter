@@ -44,4 +44,4 @@ jobs:
         script: |
           cd /home/ubuntu/newsletter
           docker load < nls.tar
-          docker load < nlm.tag
+          docker load < nlm.tar
