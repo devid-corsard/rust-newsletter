@@ -23,7 +23,7 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
-        source: "*"
+        source: "*, !.git, !.github, !tests"
         target: "/home/ubuntu/newsletter/"
         overwrite: true
 
