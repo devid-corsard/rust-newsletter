@@ -11,39 +11,23 @@ env:
   SQLX_VERSION: 0.6.2
   SQLX_FEATURES: "rustls,postgres"
 
-# A workflow run is made up of one or more jobs, which run in parallel by default
-# Each job runs in a runner environment specified by runs-on
 jobs:
-  # Unique identifier of our job (`job_id`)
   test:
-    # Sets the name `Test` for the job, which is displayed in the GitHub UI
     name: Test
-    # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
-    # Service containers to run with the `test` container job
     services:
-      # Label used to access the service container
       postgres:
-        # Docker Hub image 
         image: postgres:14
-        # Environment variables scoped only for the `postgres` element
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
           POSTGRES_DB: postgres
-        # When you map ports using the ports keyword, GitHub uses the --publish command to publish the container’s ports to the Docker host
-        # Opens tcp port 5432 on the host and service container
         ports:
           - 5432:5432
     steps:
-        # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
-        # The uses keyword specifies that this step will run v3 of the actions/checkout action. 
-        # This is an action that checks out your repository onto the runner, allowing you to run scripts or other actions against your code (such as build and test tools).
-        # You should use the checkout action any time your workflow will run against the repository's code.
         uses: actions/checkout@v3
 
-       # This GitHub Action installs a Rust toolchain using rustup. It is designed for one-line concise usage and good defaults.
       - name: Install the Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
@@ -74,7 +58,6 @@ jobs:
       - name: Run tests
         run: cargo test
 
-  # `fmt` container job
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
