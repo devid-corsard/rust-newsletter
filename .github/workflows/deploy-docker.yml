@@ -35,5 +35,4 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
           cd ~/newsletter
-          docker compose build
-          docker compose up -d
+          docker compose up --build -d
