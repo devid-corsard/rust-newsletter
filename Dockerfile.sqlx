@@ -2,7 +2,7 @@ FROM rust:alpine as builder
 
 RUN apk add musl-dev openssl ca-certificates pkgconfig libressl-dev
 
-RUN cargo install --version=0.5.7 sqlx-cli --no-default-features --features postgres
+RUN cargo install --version=^0.7 sqlx-cli --no-default-features --features postgres
 
 FROM alpine
 
