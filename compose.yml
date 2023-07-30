@@ -47,6 +47,7 @@ services:
       - APP_DATABASE__PASSWORD=${POSTGRES_PW}
       - APP_DATABASE__HOST=${POSTGRES_HOST}
       - APP_DATABASE__DATABASE_NAME=${POSTGRES_DB}
+      - APP_APPLICATION__BASE_URL=${APP_BASE_URL}
     depends_on:
       postgres:
         condition: service_healthy
