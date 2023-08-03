@@ -471,6 +471,7 @@ name = "cloud_app"
 version = "0.1.0"
 dependencies = [
  "actix-web",
+ "anyhow",
  "chrono",
  "claims",
  "config",
