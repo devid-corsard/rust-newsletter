@@ -82,6 +82,30 @@ async fn newsletters_returns_400_for_invalid_data() {
     }
 }
 
+#[tokio::test]
+async fn requests_missing_authorization_are_rejected() {
+    let app = spawn_app().await;
+    let newsletter_body = serde_json::json!({
+        "title":"Newsletter title",
+        "content":{
+            "html":"<h1>Newsletter html content</h1>",
+            "text":"Nesletter plain text content"
+        }
+    });
+
+    let response = reqwest::Client::new()
+        .post(format!("{}/newsletters", &app.address))
+        .json(&newsletter_body)
+        .send()
+        .await
+        .expect("Failed to send newsletter body");
+    assert_eq!(response.status().as_u16(), 401);
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"]
+    );
+}
+
 async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
     let body = "name=devid%20corsard&email=devid_corsard%40gmail.com";
 
