@@ -159,15 +159,6 @@ async fn validate_credentials(
     credentials: Credentials,
     pool: &PgPool,
 ) -> Result<uuid::Uuid, PublishError> {
-    // let mut hasher = Sha3_256::new();
-    // hasher.update(credentials.password.expose_secret().as_bytes());
-    // let hasher = Argon2::new(
-    //     Algorithm::Argon2id,
-    //     Version::V0x13,
-    //     Params::new(1500, 2, 1, None)
-    //         .context("Failed to build Argon2 parametereeees!")
-    //         .map_err(PublishError::UnexpectedError)?,
-    // );
     let row: Option<_> = sqlx::query!(
         "SELECT user_id, password_hash FROM users WHERE username = $1",
         credentials.username
