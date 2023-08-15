@@ -177,7 +177,6 @@ async fn validate_credentials(
         user_id = Some(stored_user_id);
         expected_password_hash = stored_password_hash;
     }
-    // .ok_or_else(|| PublishError::AuthError(anyhow::anyhow!("Unknown username")))?;
     spawn_blocking_with_tracing(move || {
         verify_password_hash(expected_password_hash, credentials.password)
     })

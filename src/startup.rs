@@ -4,7 +4,7 @@ use actix_web::{dev::Server, web, App, HttpServer};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tracing_actix_web::TracingLogger;
 
-use crate::routes::{confirm, publish_newsletter};
+use crate::routes::{confirm, home, login, login_form, publish_newsletter};
 use crate::{
     configuration::{DatabaseSettings, Settings},
     email_client::EmailClient,
@@ -80,6 +80,9 @@ pub fn run(
             .route("/subscriptions", web::post().to(subscribe))
             .route("/subscriptions/confirm", web::get().to(confirm))
             .route("/newsletters", web::post().to(publish_newsletter))
+            .route("/", web::get().to(home))
+            .route("/login", web::get().to(login_form))
+            .route("/login", web::post().to(login))
             .app_data(db_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())
