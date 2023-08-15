@@ -142,3 +142,58 @@ async fn create_confirmed_subscriber(app: &TestApp) {
         .error_for_status()
         .unwrap();
 }
+
+#[tokio::test]
+async fn non_existing_user_is_rejected() {
+    let app = spawn_app().await;
+    let username = uuid::Uuid::new_v4().to_string();
+    let password = uuid::Uuid::new_v4().to_string();
+    let newsletter_body = serde_json::json!({
+        "title":"Newsletter title",
+        "content":{
+            "html":"<h1>Newsletter html content</h1>",
+            "text":"Nesletter plain text content"
+        }
+    });
+
+    let response = reqwest::Client::new()
+        .post(format!("{}/newsletters", &app.address))
+        .basic_auth(username, Some(password))
+        .json(&newsletter_body)
+        .send()
+        .await
+        .expect("Failed to send newsletter body");
+
+    assert_eq!(response.status().as_u16(), 401);
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"]
+    );
+}
+
+#[tokio::test]
+async fn invalid_password_is_rejected() {
+    let app = spawn_app().await;
+    let username = app.test_user.username;
+    let password = uuid::Uuid::new_v4().to_string();
+    assert_ne!(password, app.test_user.password);
+    let newsletter_body = serde_json::json!({
+        "title":"Newsletter title",
+        "content":{
+            "html":"<h1>Newsletter html content</h1>",
+            "text":"Nesletter plain text content"
+        }
+    });
+    let response = reqwest::Client::new()
+        .post(format!("{}/newsletters", &app.address))
+        .basic_auth(username, Some(password))
+        .json(&newsletter_body)
+        .send()
+        .await
+        .expect("Failed to send newsletter body");
+    assert_eq!(response.status().as_u16(), 401);
+    assert_eq!(
+        r#"Basic realm="publish""#,
+        response.headers()["WWW-Authenticate"]
+    );
+}
