@@ -209,6 +209,5 @@ fn verify_password_hash(
             &expected_password_hash,
         )
         .context("Invalid password")
-        .map_err(PublishError::AuthError)?;
-    Ok(())
+        .map_err(PublishError::AuthError)
 }
