@@ -1,4 +1,4 @@
-.PHONY: test check clippy run build clear before-commit
+.PHONY: test check clippy run watch build clear git-check prepare
 
 test:
 	cargo test
@@ -12,10 +12,19 @@ clippy:
 run:
 	cargo run | bunyan
 
+watch:
+	cargo watch -x run
+
 build:
 	cargo build
 
 clear:
 	cargo clear
 
-before-commit: check clippy test
+git-check: check clippy test
+
+prepare:
+	eval `ssh-agent -s`
+	ssh-add ~/.ssh/github
+	sudo service docker start
+	./scripts/init_db.sh
