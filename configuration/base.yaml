@@ -1,5 +1,6 @@
 application:
   port: 8080
+  hmac_secret: "incredebly_long_and_very_secret_string_thad_should_be_passed_by_APP_APPLICATION__HMAC_SECRET_env_var"
 database:
   host: "127.0.0.1"
   port: 5432
