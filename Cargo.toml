@@ -17,7 +17,6 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1", features = ["derive"]}
 config = "0.11"
 uuid = { version = "1.4", features = ["v4"] }
-# chrono = "0.4.15"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
@@ -27,10 +26,8 @@ secrecy = { version = "0.8", features = ["serde"] }
 tracing-actix-web = "0.5"
 serde-aux = "3"
 unicode-segmentation = "1"
-# claim = "0.5"
 claims = "0.7"
 validator = "0.15"
-reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
 rand = { version = "0.8", features=["std_rng"] }
 thiserror = "1.0.44"
 anyhow = "1.0.72"
@@ -42,6 +39,11 @@ htmlescape = "0.3.1"
 hmac = { version = "0.12.1", features = ["std"] }
 sha2 = "0.10.7"
 hex = "0.4.3"
+
+[dependencies.reqwest]
+version = "0.11"
+default-features = false
+features = ["json", "rustls-tls", "cookies"] 
 
 [dependencies.sqlx]
 version = "0.7.1"
