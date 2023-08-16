@@ -48,6 +48,7 @@ services:
       - APP_DATABASE__HOST=${POSTGRES_HOST}
       - APP_DATABASE__DATABASE_NAME=${POSTGRES_DB}
       - APP_APPLICATION__BASE_URL=${APP_BASE_URL}
+      - APP_APPLICATION__HMAC_SECRET=${APP_HMAC_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
