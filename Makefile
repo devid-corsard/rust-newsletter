@@ -1,4 +1,4 @@
-.PHONY: test check clippy run watch build clear git-check prepare
+.PHONY: test check clippy run watch build clear git-check
 
 test:
 	cargo test
@@ -22,9 +22,3 @@ clear:
 	cargo clear
 
 git-check: check clippy test
-
-prepare:
-	eval `ssh-agent -s`
-	ssh-add ~/.ssh/github
-	sudo service docker start
-	./scripts/init_db.sh
