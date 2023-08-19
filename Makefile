@@ -1,4 +1,4 @@
-.PHONY: test check clippy run watch build clear git-check
+.PHONY: test check clippy run watch build clean git-check
 
 test:
 	cargo test
@@ -18,7 +18,7 @@ watch:
 build:
 	cargo build
 
-clear:
-	cargo clear
+clean:
+	cargo clean
 
 git-check: check clippy test
