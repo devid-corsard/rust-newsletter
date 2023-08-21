@@ -112,6 +112,14 @@ impl TestApp {
             .expect("Failed to execute a request")
     }
 
+    pub async fn post_logout(&self) -> Response {
+        self.api_client
+            .post(&format!("{}/admin/logout", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute a request")
+    }
+
     pub async fn get_admin_dashboard_html(&self) -> String {
         self.get_admin_dashboard().await.text().await.unwrap()
     }
