@@ -1,5 +1,6 @@
 use actix_web::{web, HttpResponse};
-use secrecy::Secret;
+use actix_web_flash_messages::FlashMessage;
+use secrecy::{ExposeSecret, Secret};
 
 use crate::{
     session_state::TypedSession,
@@ -14,11 +15,15 @@ pub struct FormData {
 }
 
 pub async fn change_password(
-    _form: web::Form<FormData>,
+    form: web::Form<FormData>,
     session: TypedSession,
 ) -> Result<HttpResponse, actix_web::Error> {
     if session.get_user_id().map_err(e500)?.is_none() {
         return Ok(see_other("/login"));
+    }
+    if form.new_password.expose_secret() != form.new_password_check.expose_secret() {
+        FlashMessage::error("New passwords doesn't match.").send();
+        return Ok(see_other("/admin/password"));
     }
 
     Ok(HttpResponse::Ok().finish())

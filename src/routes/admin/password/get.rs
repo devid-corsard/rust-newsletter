@@ -1,16 +1,26 @@
 use actix_web::{http::header::ContentType, HttpResponse};
+use actix_web_flash_messages::IncomingFlashMessages;
 
 use crate::{
     session_state::TypedSession,
     utils::{e500, see_other},
 };
 
-pub async fn change_password_form(session: TypedSession) -> Result<HttpResponse, actix_web::Error> {
+pub async fn change_password_form(
+    session: TypedSession,
+    flash_messages: IncomingFlashMessages,
+) -> Result<HttpResponse, actix_web::Error> {
     if session.get_user_id().map_err(e500)?.is_none() {
         return Ok(see_other("/login"));
     }
-    Ok(HttpResponse::Ok().content_type(ContentType::html()).body(
-        r#"<!doctype html>
+    let mut html_messages = String::new();
+    for message in flash_messages.iter() {
+        html_messages.push_str(&format!("<p><i>{}</i></p>", message.content()));
+    }
+    Ok(HttpResponse::Ok()
+        .content_type(ContentType::html())
+        .body(format!(
+            r#"<!doctype html>
 <html lang="en">
     <head>
         <title>Change Password</title>
@@ -19,6 +29,7 @@ pub async fn change_password_form(session: TypedSession) -> Result<HttpResponse,
         <!-- <link href="css/style.css" rel="stylesheet"> -->
     </head>
     <body>
+        {html_messages}
         <form action="/admin/password" method="post">
             <label
                 >Current password
@@ -51,6 +62,6 @@ pub async fn change_password_form(session: TypedSession) -> Result<HttpResponse,
         </form>
         <p><a href="/admin/dashboard">&lt;- Back</a></p>
     </body>
-</html>"#,
-    ))
+</html>"#
+        )))
 }
