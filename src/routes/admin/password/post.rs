@@ -31,6 +31,10 @@ pub async fn change_password(
         FlashMessage::error("New passwords doesn't match.").send();
         return Ok(see_other("/admin/password"));
     }
+    if form.new_password.expose_secret().len() < 8 {
+        FlashMessage::error("Password must be at least 8 characters long.").send();
+        return Ok(see_other("/admin/password"));
+    }
     let username = get_username(&user_id, &pool).await.map_err(e500)?;
     let credentials = Credentials {
         username,
