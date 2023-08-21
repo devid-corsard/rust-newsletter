@@ -11,5 +11,5 @@ pub async fn logout(session: TypedSession) -> Result<HttpResponse, actix_web::Er
         session.logout();
         FlashMessage::info("You have successfully logged out.").send();
     }
-    return Ok(see_other("/login"));
+    Ok(see_other("/login"))
 }
