@@ -136,11 +136,22 @@ impl TestApp {
             .expect("Failed to execute a request")
     }
 
-    pub async fn post_newsletters(&self, body: serde_json::Value) -> reqwest::Response {
+    pub async fn get_newsletters(&self) -> Response {
         self.api_client
-            .post(format!("{}/newsletters", &self.address))
-            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
-            .json(&body)
+            .get(&format!("{}/admin/newsletters", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute a request")
+    }
+
+    pub async fn get_newsletters_html(&self) -> String {
+        self.get_newsletters().await.text().await.unwrap()
+    }
+
+    pub async fn post_newsletters(&self, body: &serde_json::Value) -> reqwest::Response {
+        self.api_client
+            .post(format!("{}/admin/newsletters", &self.address))
+            .form(&body)
             .send()
             .await
             .expect("Failed to send newsletter body")
@@ -181,6 +192,13 @@ impl TestUser {
         .execute(pool)
         .await
         .expect("Failed to save test user into DB.");
+    }
+    pub async fn login(&self, app: &TestApp) {
+        let login_body = serde_json::json!({
+            "username": &self.username,
+            "password": &self.password,
+        });
+        app.post_login(&login_body).await;
     }
 }
 
