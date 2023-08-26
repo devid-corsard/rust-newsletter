@@ -4,6 +4,7 @@ use actix_web_flash_messages::IncomingFlashMessages;
 pub async fn newsletters_form(
     flash_messages: IncomingFlashMessages,
 ) -> Result<HttpResponse, actix_web::Error> {
+    let idempotency_key = uuid::Uuid::new_v4().to_string();
     let mut html_messages = String::new();
     for message in flash_messages.iter() {
         html_messages.push_str(&format!("<p><i>{}</i></p>", message.content()));
@@ -36,8 +37,8 @@ pub async fn newsletters_form(
             <label
                 >Text content
                 <textarea
-                    placeholder="Enter content"
-                    name="text"
+                    placeholder="Enter text content"
+                    name="text_content"
                     cols="50"
                     rows="20"
                 ></textarea>
@@ -46,14 +47,15 @@ pub async fn newsletters_form(
             <label
                 >HTML content
                 <textarea
-                    placeholder="Enter content"
-                    name="html"
+                    placeholder="Enter html content"
+                    name="html_content"
                     cols="50"
                     rows="20"
                 ></textarea>
             </label>
             <br />
-            <button type="submit">Send newsletter</button>
+            <input hidden type="text" name="idempotency_key" value="{idempotency_key}">
+            <button type="submit">Publish</button>
         </form>
         <p><a href="/admin/dashboard">&lt;- Back</a></p>
     </body>

@@ -56,7 +56,8 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     let newsletter_body = serde_json::json!({
         "title":"Newsletter title",
         "html_content":"<h1>Newsletter html content</h1>",
-        "text_content":"Nesletter plain text content"
+        "text_content":"Nesletter plain text content",
+        "idempotency_key":uuid::Uuid::new_v4().to_string()
     });
     let response = app.post_newsletters(&newsletter_body).await;
     assert_is_redirect_to(&response, "/admin/newsletters");
@@ -82,7 +83,8 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     let newsletter_body = serde_json::json!({
         "title":"Newsletter title",
         "html_content":"<h1>Newsletter html content</h1>",
-        "text_content":"Nesletter plain text content"
+        "text_content":"Nesletter plain text content",
+        "idempotency_key":uuid::Uuid::new_v4().to_string()
     });
     let response = app.post_newsletters(&newsletter_body).await;
     assert_is_redirect_to(&response, "/admin/newsletters");
@@ -98,12 +100,16 @@ async fn newsletters_returns_400_for_invalid_data() {
         (
             serde_json::json!({
                 "html_content":"<h1>Newsletter html content</h1>",
-                "text_content":"Nesletter plain text content"
+                "text_content":"Nesletter plain text content",
+                "idempotency_key":uuid::Uuid::new_v4().to_string()
             }),
             "missing title",
         ),
         (
-            serde_json::json!({"title":"Newsletter title"}),
+            serde_json::json!({
+                "title":"Newsletter title",
+                "idempotency_key":uuid::Uuid::new_v4().to_string()
+            }),
             "missing content",
         ),
     ];
@@ -134,8 +140,42 @@ async fn you_must_be_loggedin_to_publish_newsletters() {
     let newsletter_body = serde_json::json!({
         "title":"Newsletter title",
         "html_content":"<h1>Newsletter html content</h1>",
-        "text_content":"Nesletter plain text content"
+        "text_content":"Nesletter plain text content",
+        "idempotency_key":uuid::Uuid::new_v4().to_string()
     });
     let response = app.post_newsletters(&newsletter_body).await;
     assert_is_redirect_to(&response, "/login");
+}
+
+#[tokio::test]
+async fn newsletter_creation_is_idempotent() {
+    let app = spawn_app().await;
+    create_confirmed_subscriber(&app).await;
+    // CREATING MOCK EMAIL SERVER THAT EXPECTS 1 CALL
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+    // LOGIN
+    app.test_user.login(&app).await;
+    // SEND A NEWSLETTER
+    let newsletter_body = serde_json::json!({
+        "title":"Newsletter title",
+        "html_content":"<h1>Newsletter html content</h1>",
+        "text_content":"Nesletter plain text content",
+        "idempotency_key": uuid::Uuid::new_v4().to_string()
+    });
+    let response = app.post_newsletters(&newsletter_body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+    // FOLLOW THE REDIRECT
+    let html_response = app.get_newsletters_html().await;
+    assert!(html_response.contains("<p><i>Successfully send a newsletter</i></p>"));
+    // SUBMIT NEWSLETTER FORM **AGAIN**
+    let response = app.post_newsletters(&newsletter_body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+    // FOLLOW THE REDIRECT
+    let html_response = app.get_newsletters_html().await;
+    assert!(html_response.contains("<p><i>Successfully send a newsletter</i></p>"));
 }
