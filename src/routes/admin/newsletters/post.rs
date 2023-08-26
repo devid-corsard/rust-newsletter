@@ -7,7 +7,7 @@ use crate::{
     authentication::UserId,
     domain::SubscriberEmail,
     email_client::EmailClient,
-    idempotency::{get_stored_http_response, store_http_response, IdempotencyKey},
+    idempotency::{store_http_response, try_processing, IdempotencyKey, NextAction},
     utils::{e400, e500, see_other},
 };
 
@@ -38,13 +38,16 @@ pub async fn publish_newsletter(
         idempotency_key,
     } = form.0;
     let idempotency_key: IdempotencyKey = idempotency_key.try_into().map_err(e400)?;
-    if let Some(saved_response) = get_stored_http_response(&pool, &idempotency_key, *user_id)
+    let transaction = match try_processing(&pool, &idempotency_key, *user_id)
         .await
         .map_err(e500)?
     {
-        FlashMessage::info("Successfully send a newsletter").send();
-        return Ok(saved_response);
-    }
+        NextAction::StartProcessing(t) => t,
+        NextAction::ReturnSavedResponse(saved_response) => {
+            success_message().send();
+            return Ok(saved_response);
+        }
+    };
     let subscribers = get_confirmed_subscribers(&pool).await.map_err(e500)?;
     for subscriber in subscribers {
         match subscriber {
@@ -65,12 +68,16 @@ pub async fn publish_newsletter(
             }
         }
     }
-    FlashMessage::info("Successfully send a newsletter").send();
+    success_message().send();
     let response = see_other("/admin/newsletters");
-    let response = store_http_response(&pool, &idempotency_key, *user_id, response)
+    let response = store_http_response(transaction, &idempotency_key, *user_id, response)
         .await
         .map_err(e500)?;
     Ok(response)
+}
+
+fn success_message() -> FlashMessage {
+    FlashMessage::info("Successfully send a newsletter")
 }
 
 struct ConfirmedSubscriber {

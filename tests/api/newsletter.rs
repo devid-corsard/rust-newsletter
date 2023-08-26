@@ -179,3 +179,33 @@ async fn newsletter_creation_is_idempotent() {
     let html_response = app.get_newsletters_html().await;
     assert!(html_response.contains("<p><i>Successfully send a newsletter</i></p>"));
 }
+
+#[tokio::test]
+async fn concurrent_form_submission_is_handled_gracefully() {
+    let app = spawn_app().await;
+    create_confirmed_subscriber(&app).await;
+    // CREATING MOCK EMAIL SERVER THAT EXPECTS 1 CALL
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(1)
+        .mount(&app.email_server)
+        .await;
+    // LOGIN
+    app.test_user.login(&app).await;
+    // SEND A NEWSLETTER
+    let newsletter_body = serde_json::json!({
+        "title":"Newsletter title",
+        "html_content":"<h1>Newsletter html content</h1>",
+        "text_content":"Nesletter plain text content",
+        "idempotency_key": uuid::Uuid::new_v4().to_string()
+    });
+    let response1 = app.post_newsletters(&newsletter_body);
+    let response2 = app.post_newsletters(&newsletter_body);
+    let (response1, response2) = tokio::join!(response1, response2);
+    assert_eq!(response1.status(), response2.status());
+    assert_eq!(
+        response1.text().await.unwrap(),
+        response2.text().await.unwrap()
+    );
+}
