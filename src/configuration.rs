@@ -5,9 +5,9 @@ use sqlx::{
     ConnectOptions,
 };
 
-use crate::domain::SubscriberEmail;
+use crate::{domain::SubscriberEmail, email_client::EmailClient};
 
-#[derive(serde::Deserialize)]
+#[derive(Clone, serde::Deserialize)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application: ApplicationSettings,
@@ -15,7 +15,7 @@ pub struct Settings {
     pub redis_uri: Secret<String>,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Clone, serde::Deserialize)]
 pub struct EmailClientSettings {
     pub base_url: String,
     pub sender_email: String,
@@ -30,9 +30,21 @@ impl EmailClientSettings {
     pub fn timeout(&self) -> std::time::Duration {
         std::time::Duration::from_millis(self.timeout_milliseconds)
     }
+    pub fn client(self) -> EmailClient {
+        let sender_email = self
+            .sender()
+            .expect("Ouch! That stupid email didn't pass a validation");
+        let timeout = self.timeout();
+        EmailClient::new(
+            self.base_url,
+            sender_email,
+            self.authorization_token,
+            timeout,
+        )
+    }
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Clone, serde::Deserialize)]
 pub struct ApplicationSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
@@ -41,7 +53,7 @@ pub struct ApplicationSettings {
     pub hmac_secret: Secret<String>,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Clone, serde::Deserialize)]
 pub struct DatabaseSettings {
     pub username: String,
     pub password: Secret<String>,

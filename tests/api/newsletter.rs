@@ -1,3 +1,7 @@
+use fake::{
+    faker::{internet::en::SafeEmail, name::en::FirstName},
+    Fake,
+};
 use wiremock::{
     matchers::{any, method, path},
     Mock, ResponseTemplate,
@@ -9,7 +13,13 @@ use crate::{
 };
 
 async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
-    let body = "name=devid%20corsard&email=devid_corsard%40gmail.com";
+    let name: String = FirstName().fake();
+    let email: String = SafeEmail().fake();
+    let body = serde_urlencoded::to_string(&serde_json::json!({
+        "name": name,
+        "email": email
+    }))
+    .unwrap();
     let _mock_guard = Mock::given(path("/email"))
         .and(method("POST"))
         .respond_with(ResponseTemplate::new(200))
@@ -62,8 +72,12 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     let response = app.post_newsletters(&newsletter_body).await;
     assert_is_redirect_to(&response, "/admin/newsletters");
     // FOLLOW THE REDIRECT
-    let html_response = app.get_newsletters_html().await;
-    assert!(html_response.contains("<p><i>Successfully send a newsletter</i></p>"));
+    let html_page = app.get_newsletters_html().await;
+    assert!(html_page.contains(
+        "<p><i>The newsletter issue has been accepted - \
+        emails will go out shortly.</i></p>"
+    ));
+    app.dispatch_all_pending_emails().await;
 }
 
 #[tokio::test]
@@ -90,7 +104,11 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     assert_is_redirect_to(&response, "/admin/newsletters");
     // FOLLOW THE REDIRECT
     let html_response = app.get_newsletters_html().await;
-    assert!(html_response.contains("<p><i>Successfully send a newsletter</i></p>"));
+    assert!(html_response.contains(
+        "<p><i>The newsletter issue has been accepted - \
+        emails will go out shortly.</i></p>"
+    ));
+    app.dispatch_all_pending_emails().await;
 }
 
 #[tokio::test]
@@ -170,14 +188,21 @@ async fn newsletter_creation_is_idempotent() {
     let response = app.post_newsletters(&newsletter_body).await;
     assert_is_redirect_to(&response, "/admin/newsletters");
     // FOLLOW THE REDIRECT
-    let html_response = app.get_newsletters_html().await;
-    assert!(html_response.contains("<p><i>Successfully send a newsletter</i></p>"));
+    let html_page = app.get_newsletters_html().await;
+    assert!(html_page.contains(
+        "<p><i>The newsletter issue has been accepted - \
+        emails will go out shortly.</i></p>"
+    ));
     // SUBMIT NEWSLETTER FORM **AGAIN**
     let response = app.post_newsletters(&newsletter_body).await;
     assert_is_redirect_to(&response, "/admin/newsletters");
     // FOLLOW THE REDIRECT
-    let html_response = app.get_newsletters_html().await;
-    assert!(html_response.contains("<p><i>Successfully send a newsletter</i></p>"));
+    let html_page = app.get_newsletters_html().await;
+    assert!(html_page.contains(
+        "<p><i>The newsletter issue has been accepted - \
+        emails will go out shortly.</i></p>"
+    ));
+    app.dispatch_all_pending_emails().await;
 }
 
 #[tokio::test]
@@ -208,4 +233,5 @@ async fn concurrent_form_submission_is_handled_gracefully() {
         response1.text().await.unwrap(),
         response2.text().await.unwrap()
     );
+    app.dispatch_all_pending_emails().await;
 }
